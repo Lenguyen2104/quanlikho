@@ -1,0 +1,74 @@
+<div class="bg-gray-900 text-white h-screen transition-all duration-300 flex flex-col" 
+     [ngClass]="{'w-64': !isSidebarCollapsed, 'w-16': isSidebarCollapsed}">
+    <div class="p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold" [ngClass]="{'hidden': isSidebarCollapsed}">{{nameUser}}</h1>
+        <button (click)="toggleSidebar()" class="text-white focus:outline-none">
+            <i class="fas" [ngClass]="{'fa-bars': isSidebarCollapsed, 'fa-times': !isSidebarCollapsed}"></i>
+        </button>
+    </div>
+    <nav class="flex-grow mt-6">
+        <a class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center" 
+           (click)="setActiveMenu('products')"
+           [ngClass]="{'bg-gray-700': activeMenu === 'products'}"
+           routerLink="/admin/products">
+            <i class="fas fa-box mr-2"></i>
+            <span [ngClass]="{'hidden': isSidebarCollapsed}">Quản lý sản phẩm</span>
+        </a>
+        <a class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center" 
+           (click)="setActiveMenu('categories')"
+           [ngClass]="{'bg-gray-700': activeMenu === 'categories'}"
+           [routerLink]="['/admin/categories']">
+            <i class="fas fa-list mr-2"></i>
+            <span [ngClass]="{'hidden': isSidebarCollapsed}">Danh mục hàng</span>
+        </a>
+        <div class="relative">
+            <a class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center justify-between cursor-pointer" 
+               (click)="toggleCategoryMenu(); setActiveMenu('categoryManagement')"
+
+               [ngClass]="{'bg-gray-700': activeMenu === 'categoryManagement'}"
+               >
+                <div class="flex items-center">
+                    <i class="fas fa-list mr-2"></i>
+                    <span [ngClass]="{'hidden': isSidebarCollapsed}">Quản lý loại hàng</span>
+                </div>
+                <i class="fas" [ngClass]="{'fa-chevron-down': !isCategoryMenuOpen, 'fa-chevron-up': isCategoryMenuOpen}"></i>
+            </a>
+            <div class="pl-8" *ngIf="isCategoryMenuOpen && !isSidebarCollapsed">
+                <a *ngFor="let category of categories"
+                   (click)="selectCategory(category); setActiveMenu('category-' + category.category_id)"
+                   [routerLink]="['/admin/product-category']"
+                   class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-600"
+                   [ngClass]="{'bg-gray-700': activeMenu === 'category-' + category.category_id}">
+                    {{ category.category_name }}
+                </a>
+            </div>
+        </div>
+        <a class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center" 
+           (click)="setActiveMenu('orderManagement')"
+           [ngClass]="{'bg-gray-700': activeMenu === 'orderManagement'}"
+           [routerLink]="['/admin/order-management']">
+            <i class="fas fa-list mr-2"></i>
+            <span [ngClass]="{'hidden': isSidebarCollapsed}">Quản lý đơn hàng</span>
+        </a>
+        <a class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center" 
+           (click)="setActiveMenu('report')"
+           [ngClass]="{'bg-gray-700': activeMenu === 'report'}"
+           [routerLink]="['/admin/report']">
+            <i class="fas fa-list mr-2"></i>
+            <span [ngClass]="{'hidden': isSidebarCollapsed}">Báo cáo và nhập bù</span>
+        </a>
+    </nav>
+    <div class="p-4">
+        <div class="relative">
+            <button (click)="toggleDropdown($event)" class="text-gray-300 focus:outline-none w-full text-left flex items-center">
+                <i class="fas fa-cog mr-2"></i>
+                <span [ngClass]="{'hidden': isSidebarCollapsed}">Settings</span>
+            </button>
+            <div *ngIf="isDropdownOpen" 
+                 class="absolute left-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                <a [routerLink]="['/home']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Trang chủ</a>
+                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200" (click)="logout()">Đăng xuất</a>
+            </div>
+        </div>
+    </div>
+</div>

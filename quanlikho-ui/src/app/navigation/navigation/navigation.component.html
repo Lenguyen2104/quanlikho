@@ -1,0 +1,706 @@
+<header class="bg-black text-white">
+    <div class="container-fluid px-2 sm:px-4 py-2">
+        <div class="flex flex-col sm:flex-row justify-between items-center">
+            <!-- Navigation Links -->
+            <nav
+                class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto order-2 sm:order-1">
+                <a [routerLink]="['/home']" class="text-sm text-gray-300 hover:text-white transition duration-300">
+                    TRANG CHỦ
+                </a>
+                <!-- Danh mục sản phẩm dropdown -->
+                <div class="relative group">
+                    <a
+                        class="text-sm text-gray-300 hover:text-white flex items-center cursor-pointer transition duration-300">
+                        DANH MỤC SẢN PHẨM
+                        <i class="fas fa-chevron-down ml-1"></i>
+                    </a>
+                    <div
+                        class="absolute left-0 top-full pt-2 w-64 bg-white border border-gray-200 z-50 rounded-md shadow-lg hidden group-hover:block">
+                        <div *ngFor="let category of categories"
+                            class="flex items-center justify-between px-4 py-2 hover:bg-gray-100">
+                            <a (click)="selectCategory(category)" class="text-sm text-gray-700 cursor-pointer flex-grow"
+                                [routerLink]="['/home']">
+                                {{category.category_name}}
+                            </a>
+                            <button *ngIf="isLoggedIn" (click)="openEditCategoryPopup(category)"
+                                class="mr-2 text-blue-500 hover:text-blue-700">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button *ngIf="isLoggedIn" (click)="openDeleteCategoryPopup(category.category_id)"
+                                class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div *ngIf="isLoggedIn" class="border-t border-gray-200 mt-2 pt-2 px-4 py-2">
+                            <button (click)="openAddCategoryPopup()"
+                                class="w-full text-green-500 hover:text-green-700 text-sm font-medium">
+                                <i class="fas fa-plus mr-2"></i> Thêm danh mục
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Quản lý dropdown (nếu đăng nhập) -->
+                <div class="relative group" *ngIf="isLoggedIn">
+                    <a
+                        class="text-sm text-gray-300 hover:text-white flex items-center cursor-pointer transition duration-300">
+                        QUẢN LÝ
+                        <i class="fas fa-chevron-down ml-1"></i>
+                    </a>
+                    <div
+                        class="absolute left-0 top-full pt-2 w-64 text-black bg-white border border-gray-200 z-50 rounded-md shadow-lg hidden group-hover:block">
+                        <div *ngIf="isLoggedIn">
+                            <button (click)="openOrderManagementPopup()"
+                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition duration-150">
+                                Quản lý đơn hàng
+                            </button>
+                            <button (click)="openReportPopup()"
+                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition duration-150">
+                                Báo cáo và nhập bù
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <span class="w-40 text-sm sm:text-base mb-2 sm:mb-0">{{categoryName}}</span>
+            </nav>
+
+            <!-- Logo -->
+            <div class="text-2xl xl:text-xl font-bold my-2 sm:my-0 order-1 sm:order-2">
+                Xưởng In Minh Tụ
+            </div>
+
+            <!-- User Actions and Admin Buttons -->
+            <div class="flex items-center space-x-2 order-3">
+                <!-- Admin Buttons -->
+                <ng-container *ngIf="isLoggedIn">
+                    <button (click)="checkProduct()"
+                        class=" text-gray-300 hover:text-white py-1 px-2 rounded text-xs sm:text-sm transition duration-300 ease-in-out">
+                        Check
+                    </button>
+                    <button (click)="openFileUploadProductPopup()"
+                        class=" text-gray-300 hover:text-white py-1 px-2 rounded text-xs sm:text-sm transition duration-300 ease-in-out">
+                        Nhập sản phẩm
+                    </button>
+                    <button (click)="openAddProductPopup()"
+                        class="text-gray-300 hover:text-white py-1 px-2 rounded text-xs sm:text-sm ml-2 transition duration-300 ease-in-out">
+                        Thêm sản phẩm
+                    </button>
+                    <button (click)="openFileUploadPopup()"
+                        class=" text-gray-300 hover:text-white py-1 px-2 rounded text-xs sm:text-sm ml-2 transition duration-300 ease-in-out">
+                        Nhập hàng
+                    </button>
+                </ng-container>
+
+                <!-- Cart -->
+                <div class="relative group p-2">
+                    <a [routerLink]="['/cart']"
+                        class="text-sm flex items-center relative hover:text-gray-300 transition duration-300">
+                        <i class="fas fa-shopping-cart mr-1"></i>
+                        <span
+                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">{{cartCount}}</span>
+                    </a>
+                    <div
+                        class="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden group-hover:block">
+                        <div class="py-2">
+                            <div class="px-4 py-2 text-lg text-black font-semibold border-b border-gray-200">Giỏ hàng
+                            </div>
+
+                            <!-- Kiểm tra nếu giỏ hàng trống -->
+                            <ng-container *ngIf="cartItems.length === 0; else cartItemsList">
+                                <div class="px-4 py-2 text-sm text-gray-700">
+                                    Giỏ hàng trống
+                                </div>
+                            </ng-container>
+
+                            <!-- Template cho danh sách sản phẩm -->
+                            <ng-template #cartItemsList>
+                                <div class="max-h-60 overflow-y-auto">
+                                    <div *ngFor="let item of cartItems"
+                                        class="px-3 py-1 flex items-center justify-between border-b border-gray-200">
+                                        <div class="flex items-center flex-grow">
+                                            <span
+                                                class="text-sm font-medium text-gray-900 mr-4 truncate max-w-[150px]">{{
+                                                item.product_name }}</span>
+                                            <span class="text-xs text-gray-500 whitespace-nowrap"> x {{ item.quantity }}
+                                            </span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+                                            (click)="removeItem(item)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50">
+                                    <span class="text-sm font-medium text-gray-900">Tổng số lượng sản phẩm:</span>
+                                    <span class="text-sm font-bold text-gray-700">{{ cartCount }}</span>
+                                </div>
+                            </ng-template>
+
+
+                            <div class="px-4 py-3 bg-gray-50" *ngIf="cartItems.length > 0">
+                                <button [routerLink]="['/cart']"
+                                    class="w-full bg-yellow-500 text-gray-900 font-semibold rounded-md px-2 py-2 text-sm hover:bg-yellow-600 transition duration-300">
+                                    Tiến hành thanh toán
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login/User Info -->
+                <ng-container *ngIf="!isLoggedIn; else userInfo">
+                    <a [routerLink]="['/login']"
+                        class="text-sm bg-white text-black px-4 py-2 rounded-full hover:bg-gray-200 transition duration-300 flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        Đăng nhập
+                    </a>
+                </ng-container>
+                <ng-template #userInfo>
+                    <div class="relative group">
+                        <button
+                            class="text-sm bg-white text-black px-4 py-2 rounded-full hover:bg-gray-200 transition duration-300 flex items-center">
+                            <i class="fas fa-user mr-2"></i>
+                            {{ userName }}
+                        </button>
+                        <div
+                            class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <div class="pt-2">
+                                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    (click)="logout()">Đăng
+                                    xuất</a>
+                                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    (click)="openChangePasswordPopup()">Đổi mật khẩu</a>
+                                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    (click)="openAddAccountPopup()">Thêm tài khoản</a>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<!-- Edit Category Popup -->
+<div *ngIf="showEditCategoryPopup"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+    <div class="bg-white p-5 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold mb-4">Sửa danh mục</h2>
+        <p>Tên danh mục:</p>
+        <input type="text" [(ngModel)]="editingCategory.category_name" class="w-full p-2 border rounded mb-4">
+        <p>Số lượng tối thiểu:</p>
+        <input type="number" [(ngModel)]="editingCategory.min_quantity" class="w-full p-2 border rounded mb-4">
+        <div class="flex justify-end space-x-2">
+            <button (click)="openDeleteAllConfirmPopup()"
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-gray-400">Xóa toàn bộ</button>
+            <button (click)="openEditCategoryConfirmPopup()"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Lưu</button>
+            <button (click)="cancelEditCategory()"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Hủy</button>
+
+        </div>
+    </div>
+</div>
+
+<div *ngIf="showDeleteAllConfirmPopup"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+    <div class="bg-white p-5 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold mb-4">Xác nhận xóa toàn bộ</h2>
+        <p class="mb-4">Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong danh mục này?</p>
+        <div class="flex justify-end space-x-2">
+            <button (click)="deleteProductCategoryAll(editingCategory.category_id)"
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Xác nhận</button>
+            <button (click)="cancelDeleteAll()"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Popup -->
+<div *ngIf="showAddCategoryPopup"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+    <div class="bg-white p-5 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold mb-4">Thêm danh mục mới</h2>
+        <input type="text" [(ngModel)]="newCategory.category_name" placeholder="Tên danh mục"
+            class="w-full p-2 border rounded mb-4">
+        <input type="number" [(ngModel)]="newCategory.min_quantity" placeholder="Số lượng tối thiểu"
+            class="w-full p-2 border rounded mb-4">
+        <div class="flex justify-end space-x-2">
+
+            <button (click)="openAddCategoryConfirmPopup()"
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Thêm</button>
+            <button (click)="cancelAddCategory()"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isConfirmUpdatePopupOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-lg font-bold mb-4">Xác nhận sửa danh mục hàng</h2>
+        <p>Bạn có chắc chắn muốn sửa danh mục hàng này?</p>
+        <div class="flex justify-end mt-4">
+            <button (click)="saveEditCategory()"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded">Có</button>
+            <button (click)="closeConfirmPopup()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">Không</button>
+        </div>
+    </div>
+</div>
+<div *ngIf="isAddCategoryConfirmPopupOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-lg font-bold mb-4">Xác nhận thêm danh mục hàng</h2>
+        <p>Bạn có chắc chắn muốn thêm danh mục hàng này?</p>
+        <div class="flex justify-end mt-4">
+            <button (click)="saveNewCategory()"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded">Có</button>
+            <button (click)="closeConfirmPopup()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">Không</button>
+        </div>
+    </div>
+</div>
+<div *ngIf="isConfirmDeletePopupOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-lg font-bold mb-4">Xác nhận xoá danh mục hàng</h2>
+        <p>Bạn có chắc chắn muốn xóa danh mục hàng này?</p>
+        <div class="flex justify-end mt-4">
+            <button (click)="openDeleteConfirmCategoryPopup()"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded">Có</button>
+            <button (click)="closeConfirmPopup()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">Không</button>
+        </div>
+    </div>
+</div>
+<div *ngIf="showOrderManagementPopup"
+    class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+    (click)="closeOrderManagementPopup()">
+    <div class="relative bg-white rounded-lg shadow-xl max-w-7xl w-full m-4 p-6" (click)="$event.stopPropagation()">
+        <button (click)="closeOrderManagementPopup()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] xl:h-[90vh] overflow-y-auto">
+            <app-order-management></app-order-management>
+        </div>
+    </div>
+</div>
+<div *ngIf="showReportPopup"
+    class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+    (click)="closeReportPopup()">
+    <div class="relative bg-white rounded-lg shadow-xl max-w-7xl w-full m-4 p-6" (click)="$event.stopPropagation()">
+        <button (click)="closeReportPopup()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="max-h-[325px] overflow-y-hidden">
+            <app-report></app-report>
+        </div>
+    </div>
+</div>
+
+<!-- Add Account Popup -->
+
+
+<div *ngIf="showFileUploadPopup" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    (click)="closeFilePopup()">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-[1000px]" (click)="$event.stopPropagation()">
+        <h2 class="text-lg font-bold mb-4">Nhập loại hàng: {{categoryName}}</h2>
+
+        <div class="mb-4">
+            <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">
+                Chọn file Excel (.xlsx) hoặc CSV:
+            </label>
+            <input type="file" id="file-upload" (change)="onFileSelected($event)" accept=".xlsx,.csv" class="block w-full text-sm text-gray-500
+                                       file:mr-4 file:py-2 file:px-4
+                                       file:rounded-full file:border-0
+                                       file:text-sm file:font-semibold
+                                       file:bg-blue-50 file:text-blue-700
+                                       hover:file:bg-blue-100" />
+        </div>
+
+        <div *ngIf="selectedFile" class="mb-4 text-sm text-gray-600">
+            Đã chọn file: {{ selectedFile.name }}
+        </div>
+
+        <div class="col-span-3 flex justify-end mt-4">
+            <button type="button" (click)="uploadFile()" [disabled]="!selectedFile"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                Nhập
+            </button>
+            <button type="button" (click)="closeFilePopup()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+<div *ngIf="showFileUploadProductPopup"
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    (click)="closeFileUploadProductPopup()">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-[1000px]" (click)="$event.stopPropagation()">
+        <h2 class="text-lg font-bold mb-4">Nhập sản phẩm</h2>
+
+        <div class="mb-4">
+            <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">
+                Chọn file Excel (.xlsx) hoặc CSV:
+            </label>
+            <input type="file" id="file-upload" (change)="onFileSelected($event)" accept=".xlsx,.csv" class="block w-full text-sm text-gray-500
+                                       file:mr-4 file:py-2 file:px-4
+                                       file:rounded-full file:border-0
+                                       file:text-sm file:font-semibold
+                                       file:bg-blue-50 file:text-blue-700
+                                       hover:file:bg-blue-100" />
+        </div>
+
+        <div *ngIf="selectedFile" class="mb-4 text-sm text-gray-600">
+            Đã chọn file: {{ selectedFile.name }}
+        </div>
+
+        <div class="col-span-3 flex justify-end mt-4">
+            <button type="button" (click)="uploadProductCategoryFile()" [disabled]="!selectedFile"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                Nhập
+            </button>
+            <button type="button" (click)="closeFileUploadProductPopup()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+<div *ngIf="isCreatePopupOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    (click)="closeAddProductPopup()">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-[800px]" (click)="$event.stopPropagation()">
+        <h2 class="text-lg font-bold mb-4">Thêm sản phẩm</h2>
+        <form [formGroup]="formProduct" class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block mb-1 text-gray-400">Tên sản phẩm</label>
+                <input type="text" name="product_name" required class="border border-gray-300 p-2 w-full rounded"
+                    formControlName="product_name" />
+                <div class="mt-4">
+                    <label class="block mb-1 text-gray-400">Tên dùng chung</label>
+                    <div class="flex mb-2">
+                        <input type="text" #newGenericNameInput
+                            (keyup.enter)="addGenericName(newGenericNameInput.value); newGenericNameInput.value = ''"
+                            placeholder="Thêm tên dùng chung mới..."
+                            class="border border-gray-300 p-2 rounded-l flex-grow">
+                        <button (click)="addGenericName(newGenericNameInput.value); newGenericNameInput.value = ''"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 focus:outline-none">
+                            Thêm
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span *ngFor="let genericName of newGenericNames; let i = index"
+                            class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center">
+                            {{ genericName }}
+                            <button (click)="removeGenericName(i)"
+                                class="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none">
+                                &times;
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-2">
+                <label class="block mb-1 text-gray-400">Tên khóa</label>
+                <div class="flex mb-2">
+                    <input type="text" #newKeywordInput
+                        (keyup.enter)="addKeyword(newKeywordInput.value); newKeywordInput.value = ''"
+                        placeholder="Thêm từ khóa mới..." class="border border-gray-300 p-2 rounded-l flex-grow">
+                    <button (click)="addKeyword(newKeywordInput.value); newKeywordInput.value = ''"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 focus:outline-none">
+                        Thêm
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2 ">
+                    <span *ngFor="let keyword of newKeywords; let i = index"
+                        class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center">
+                        {{ keyword }}
+                        <button (click)="removeKeyword(i)"
+                            class="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none">
+                            &times;
+                        </button>
+                    </span>
+                </div>
+            </div>
+
+
+            <div class="col-span-3 flex justify-end mt-4">
+                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded"
+                    (click)="confirmCreate()">Thêm</button>
+                <button type="button" (click)="closeAddProductPopup()"
+                    class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">Đóng</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div *ngIf="showNewProductsPopup" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    (click)="closeNewProductsPopup()">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl" (click)="$event.stopPropagation()">
+        <h2 class="text-xl font-semibold mb-4">Nhập hàng cho {{categoryNameImport}}</h2>
+        <div class="max-h-[700px]">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 text-left">#</th>
+                        <th class="px-4 py-2 text-left">Tên trong kho</th>
+                        <th class="px-4 py-2 text-left">Tên trong file</th>
+                        <th class="px-4 py-2 text-left">Số lượng</th>
+                        <!-- Add more headers as needed -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let product of paginatedProducts; let i = index">
+                        <td class="px-4 py-1">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                        <td class="px-4 py-1 relative">
+                            <div class="relative">
+                                <input type="text" name="product_id"
+                                    class="border border-gray-300 p-2 w-full rounded-md pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out"
+                                    (focus)="showProductImportDropdown(i)" (click)="showProductImportDropdown(i)"
+                                    (blur)="onBlur(product)" (input)="updateProductValue(product, $event)"
+                                    [ngModel]="getProductDisplayValue(product)"
+                                    (ngModelChange)="updateInputValue(product, $event)" />
+                                <button (click)="clearProductSelectionImport(product)"
+                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div *ngIf="product.showDropdown"
+                                class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                <ul class="py-1">
+                                    <li *ngFor="let existingProduct of product.filteredProducts"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 ease-in-out"
+                                        (click)="selectProductImport(existingProduct, product)">
+                                        {{ existingProduct.product_name }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td class="px-4 py-1">{{ product.import_name }}</td>
+                        <td class="px-4 py-1">{{ product.quantity }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="flex justify-center items-center space-x-2 mt-4 pb-4">
+                <button (click)="prevPage()" [disabled]="currentPage === 1"
+                    class="px-3 py-1 rounded-md text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out">
+                    &larr; Trước
+                </button>
+                <span class="text-sm text-gray-700">
+                    Trang {{ currentPage }} / {{ totalPages }}
+                </span>
+                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                    class="px-3 py-1 rounded-md text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out">
+                    Sau &rarr;
+                </button>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button (click)="importNewProducts()"
+                class="bg-blue-500 hover:bg-blue-600 mr-2 text-white font-medium px-4 py-2 rounded-md transition duration-300 ease-in-out">
+                Nhập
+            </button>
+            <button (click)="closeNewProductsPopup()"
+                class="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-md transition duration-300 ease-in-out">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+<div *ngIf="isConfirmCreatePopupOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    (click)="closePopupCreate()">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96" (click)="$event.stopPropagation()">
+        <h2 class="text-lg font-bold mb-4">Xác nhận thêm sản phẩm</h2>
+        <p>Bạn có chắc chắn muốn thêm sản phẩm này?</p>
+        <div class="flex justify-end mt-4">
+            <button (click)="addProduct()"
+                class="bg-green-500 hover:bg-green-700 text-white mr-4 px-4 py-2 rounded">Có</button>
+            <button (click)="closePopupCreate()"
+                class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">Không</button>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isChangePasswordPopupOpen"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    (click)="closeChangePasswordPopup()">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+        (click)="$event.stopPropagation()">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 text-bottom">Đổi mật khẩu</h3>
+            <div class="mt-2 px-7 py-3">
+                <form [formGroup]="changePasswordForm" (ngSubmit)="onChangePassword()">
+                    <div class="relative">
+                        <input [type]="showOldPassword ? 'text' : 'password'" formControlName="oldPassword"
+                            placeholder="Mật khẩu hiện tại"
+                            class="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                            [ngClass]="{'border-red-500': changePasswordForm.get('oldPassword')?.invalid && (changePasswordForm.get('oldPassword')?.touched || changePasswordForm.get('oldPassword')?.dirty || showValidation)}">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                            (click)="toggleOldPasswordVisibility()">
+                            <svg *ngIf="!showOldPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg *ngIf="showOldPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div *ngIf="changePasswordForm.get('oldPassword')?.invalid && (changePasswordForm.get('oldPassword')?.touched || changePasswordForm.get('oldPassword')?.dirty || showValidation)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập mật khẩu hiện tại
+                    </div>
+
+                    <div class="relative">
+                        <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword"
+                            placeholder="Mật khẩu mới"
+                            class="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                            [ngClass]="{'border-red-500': changePasswordForm.get('newPassword')?.invalid && (changePasswordForm.get('newPassword')?.touched || changePasswordForm.get('newPassword')?.dirty || showValidation )}">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                            (click)="toggleNewPasswordVisibility()">
+                            <svg *ngIf="!showNewPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg *ngIf="showNewPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div *ngIf="changePasswordForm.get('newPassword')?.invalid && (changePasswordForm.get('newPassword')?.touched || changePasswordForm.get('newPassword')?.dirty || showValidation)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập mật khẩu mới
+                    </div>
+
+                    <div class="relative">
+                        <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
+                            placeholder="Xác nhận mật khẩu mới"
+                            class="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                            [ngClass]="{'border-red-500': changePasswordForm.get('confirmPassword')?.invalid && (changePasswordForm.get('confirmPassword')?.touched || changePasswordForm.get('confirmPassword')?.dirty || showValidation)}">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                            (click)="toggleConfirmPasswordVisibility()">
+                            <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div *ngIf="changePasswordForm.get('confirmPassword')?.invalid && (changePasswordForm.get('confirmPassword')?.touched || changePasswordForm.get('confirmPassword')?.dirty || showValidation)"
+                        class="text-red-500 text-xs mt-1">
+                        Xác nhận mật khẩu không khớp
+                    </div>
+
+                    <span
+                        *ngIf="changePasswordForm.get('confirmPassword')?.value && changePasswordForm.get('newPassword')?.value === changePasswordForm.get('confirmPassword')?.value"
+                        class="text-xs text-green-500">
+                        Mật khẩu mới khớp
+                    </span>
+                    <span
+                        *ngIf="changePasswordForm.get('confirmPassword')?.value && changePasswordForm.get('newPassword')?.value !== changePasswordForm.get('confirmPassword')?.value"
+                        class="text-xs text-red-500">
+                        Mật khẩu mới không khớp
+                    </span>
+
+                    <div class="flex justify-between mt-4 space-x-4">
+                        <button type="submit"
+                            class="flex-1 px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                            Đổi mật khẩu
+                        </button>
+                        <button type="button" (click)="closeChangePasswordPopup()"
+                            class="flex-1 px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 transition duration-150 ease-in-out">
+                            Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isAddAccountPopupOpen" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    (click)="closeAddAccountPopup()">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+        (click)="$event.stopPropagation()">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 text-bottom ">Thêm tài khoản mới</h3>
+            <div class="mt-2 px-7 py-3">
+                <form [formGroup]="accountForm" (ngSubmit)="onSubmit()">
+                    <input type="text" formControlName="email" placeholder="Tên đăng nhập"
+                        [class]="'mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1 ' + 
+                        (accountForm.get('email')?.invalid && (accountForm.get('email')?.dirty || accountForm.get('email')?.touched || showValidationErrors) ? 'border-red-500' : '')">
+                    <div *ngIf="accountForm.get('email')?.invalid && (accountForm.get('email')?.dirty || accountForm.get('email')?.touched || showValidationErrors)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập tên đăng nhập
+                    </div>
+
+                    <input type="password" formControlName="password" placeholder="Mật khẩu"
+                        [class]="'mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1 ' + 
+                        (accountForm.get('password')?.invalid && (accountForm.get('password')?.dirty || accountForm.get('password')?.touched || showValidationErrors) ? 'border-red-500' : '')">
+                    <div *ngIf="accountForm.get('password')?.invalid && (accountForm.get('password')?.dirty || accountForm.get('password')?.touched || showValidationErrors)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập mật khẩu
+                    </div>
+
+                    <input type="text" formControlName="first_name" placeholder="Họ"
+                        [class]="'mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1 ' + 
+                        (accountForm.get('first_name')?.invalid && (accountForm.get('first_name')?.dirty || accountForm.get('first_name')?.touched || showValidationErrors) ? 'border-red-500' : '')">
+                    <div *ngIf="accountForm.get('first_name')?.invalid && (accountForm.get('first_name')?.dirty || accountForm.get('first_name')?.touched || showValidationErrors)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập họ
+                    </div>
+
+                    <input type="text" formControlName="last_name" placeholder="Tên"
+                        [class]="'mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1 ' + 
+                        (accountForm.get('last_name')?.invalid && (accountForm.get('last_name')?.dirty || accountForm.get('last_name')?.touched || showValidationErrors) ? 'border-red-500' : '')">
+                    <div *ngIf="accountForm.get('last_name')?.invalid && (accountForm.get('last_name')?.dirty || accountForm.get('last_name')?.touched || showValidationErrors)"
+                        class="text-red-500 text-xs mt-1">
+                        Vui lòng nhập tên
+                    </div>
+
+                    <div class="flex justify-between space-x-4 mt-4">
+                        <button type="submit"
+                            class="flex-1 px-2 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            Thêm tài khoản
+                        </button>
+                        <button type="button" (click)="closeAddAccountPopup()"
+                            class="flex-1 px-2 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            Hủy
+                        </button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
